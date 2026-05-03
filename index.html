@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Michael's Birding Life List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     THEME — edit these to change the color scheme
+  ============================================================ */
+  :root {
+    --bg:         #f7f5f0;
+    --surface:    #ffffff;
+    --surface2:   #f0ede6;
+    --border:     #ddd9d0;
+    --border2:    #c9c4b8;
+    --text:       #1e1c18;
+    --text2:      #5c5849;
+    --text3:      #9a9388;
+    --accent:     #3d6b4f;
+    --accent-bg:  #e8f1ec;
+    --accent-text:#2a4f39;
+    --badge-bg:   #eef3f0;
+    --badge-text: #3d6b4f;
+    --sans:       'DM Sans', system-ui, sans-serif;
+    --serif:      'Crimson Pro', Georgia, serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ---- Page wrapper ---- */
+  .page { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ---- Header ---- */
+  .page-header { margin-bottom: 36px; }
+  .page-header h1 {
+    font-family: var(--serif);
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .page-header h1 span { color: var(--accent); }
+  .page-header p { font-size: 14px; color: var(--text3); margin-top: 4px; }
+
+  /* ---- Stats row ---- */
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    min-width: 120px;
+  }
+  .stat-val { font-size: 26px; font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .stat-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  /* ---- Toolbar ---- */
+  .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar input {
+    flex: 1; min-width: 180px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .toolbar input:focus { border-color: var(--accent); }
+  .toolbar input::placeholder { color: var(--text3); }
+  .count-label { font-size: 12px; color: var(--text3); white-space: nowrap; }
+
+  /* ---- Table ---- */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th:first-child { border-radius: 12px 0 0 0; }
+  thead th:last-child  { border-radius: 0 12px 0 0; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  td { padding: 10px 12px; vertical-align: middle; }
+
+  .td-no    { color: var(--text3); font-size: 12px; width: 36px; text-align: right; }
+  .td-name  { min-width: 165px; }
+  .td-name .common  { font-weight: 500; font-size: 14px; color: var(--text); }
+  .td-name .sci     { font-family: var(--serif); font-style: italic; font-size: 13px; color: var(--text2); }
+  .td-name .family  {
+    display: inline-block; margin-top: 3px;
+    font-size: 10px; padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--badge-bg); color: var(--badge-text);
+  }
+  .td-date  { font-size: 12px; color: var(--text2); white-space: nowrap; min-width: 95px; }
+  .td-loc   { font-size: 12px; color: var(--text2); min-width: 130px; }
+  .td-photos { white-space: nowrap; }
+
+  /* ---- Photo thumbnails ---- */
+  .photos-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+
+  .photo-cell {
+    position: relative;
+    width: 40px; height: 40px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    flex-shrink: 0;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .photo-cell:hover { border-color: var(--accent); transform: scale(1.08); z-index: 2; }
+  .photo-cell img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-cell .ph-emoji { font-size: 18px; }
+  .photo-count-badge {
+    position: absolute; bottom: 1px; right: 2px;
+    font-size: 9px; font-weight: 500; color: #fff;
+    background: rgba(0,0,0,0.5); border-radius: 3px; padding: 0 3px;
+    pointer-events: none;
+  }
+
+  .add-btn {
+    width: 40px; height: 40px;
+    border-radius: 6px;
+    border: 1px dashed var(--border2);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: var(--text3);
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---- Tooltip ---- */
+  #tooltip {
+    position: fixed;
+    display: none;
+    z-index: 9999;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    width: 220px;
+    pointer-events: none;
+    font-size: 12px;
+  }
+  #tooltip.show { display: block; }
+  #tooltip-img {
+    width: 100%; height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 9px;
+    background: var(--surface2);
+    display: none;
+  }
+  .tt-row { display: flex; gap: 6px; margin-bottom: 4px; }
+  .tt-lbl { color: var(--text3); min-width: 52px; flex-shrink: 0; }
+  .tt-val { color: var(--text); font-weight: 500; }
+
+  /* ---- Empty state ---- */
+  .empty { padding: 40px; text-align: center; color: var(--text3); font-size: 13px; }
+
+  /* ---- Footer ---- */
+  footer { margin-top: 48px; font-size: 12px; color: var(--text3); text-align: center; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>Michael's <span>Birding Life List</span></h1>
+    <p>Personal record of first encounters — species seen in the field</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-val" id="s-species">0</div><div class="stat-lbl">Species</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-photos">0</div><div class="stat-lbl">Photos logged</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-families">0</div><div class="stat-lbl">Families</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-years">0</div><div class="stat-lbl">Years birding</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search species or family…" oninput="render()" />
+    <span class="count-label" id="count-label"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Species</th>
+          <th>1st seen (eBird)</th>
+          <th>1st location</th>
+          <th>Photos (hover for details)</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>Last updated: <span id="last-updated"></span> &nbsp;·&nbsp; Keep this file + a /photos/ folder in the same directory for local thumbnails</footer>
+</div>
+
+<!-- ============================================================
+     TOOLTIP
+============================================================ -->
+<div id="tooltip">
+  <img id="tooltip-img" src="" alt="" />
+  <div class="tt-row"><span class="tt-lbl">Date</span><span class="tt-val" id="tt-date">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Device</span><span class="tt-val" id="tt-device">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">By</span><span class="tt-val" id="tt-by">—</span></div>
+  <div class="tt-row"><span class="tt-lbl">Location</span><span class="tt-val" id="tt-location">—</span></div>
+  <div class="tt-row" id="tt-note-row"><span class="tt-lbl">Note</span><span class="tt-val" id="tt-note">—</span></div>
+</div>
+
+<script>
+// ================================================================
+//  YOUR LIFE LIST DATA
+//  Add new birds to this array.
+//
+//  Each entry:
+//  {
+//    name:    "English name",
+//    sci:     "Scientific name",
+//    family:  "Family name",
+//    date:    "YYYY-MM-DD", loc: "",   ← date of 1st encounter on eBird
+//    photos: [
+//      {
+//        src:     "photos/bird1_photo1.jpg",  ← file path OR full URL
+//                  (leave "" if no photo yet — shows a placeholder)
+//        date:    "YYYY-MM-DD",
+//        device:  "iPhone 14 Pro",
+//        by:      "Michael",
+//        loc:     "Tainan, Taiwan",
+//        note:    "Optional note"            ← delete this line if not needed
+//      },
+//      ... up to 8 photos per bird
+//    ]
+//  }
+// ================================================================
+
+const BIRDS = [
+  { 
+	  name: "Oriental Magpie", sci: "Pica serica", family: "Corvidae", date: "2025-12-12", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Light-vented Bulbul", sci: "Pycnonotus sinensis", family: "Pycnonotidae", date: "2025-12-12", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Red Collared-Dove", sci: "Streptopelia tranquebarica", family: "Columbidae", date: "2025-12-13", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Swinhoe's White-eye", sci: "Zosterops simplex", family: "Zosteropidae", date: "2025-12-13", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Oriental Magpie-Robin", sci: "Copsychus saularis", family: "Muscicapidae", date: "2025-12-13", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Eurasian Tree Sparrow", sci: "Passer montanus", family: "Passeridae", date: "2025-12-13", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Spotted Dove", sci: "Spilopelia chinensis", family: "Columbidae", date: "2025-12-14", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Malayan Night Heron", sci: "Gorsachius melanolophus", family: "Ardeidae", date: "2025-12-14", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Taiwan Barbet", sci: "Psilopogon nuchalis", family: "Megalaimidae", date: "2025-12-14", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Brown Shrike", sci: "Lanius cristatus", family: "Laniidae", date: "2025-12-14", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Pacific Swallow", sci: "Hirundo tahitica", family: "Hirundinidae", date: "2025-12-14", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Javan Myna", sci: "Acridotheres javanicus", family: "Sturnidae", date: "2025-12-14", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "White Wagtail", sci: "Motacilla alba", family: "Motacillidae", date: "2025-12-14", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Rock Pigeon", sci: "Columba livia", family: "Columbidae", date: "2025-12-20", loc: "Zhongshan Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Black-crowned Night Heron", sci: "Nycticorax nycticorax", family: "Ardeidae", date: "2025-12-20", loc: "Zhongshan Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Little Egret", sci: "Egretta garzetta", family: "Ardeidae", date: "2025-12-20", loc: "Zhongshan Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Medium Egret", sci: "Ardea intermedia", family: "Ardeidae", date: "2025-12-20", loc: "Zhongshan Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Gray-capped Pygmy Woodpecker", sci: "Yungipicus canicapillus", family: "Picidae", date: "2025-12-20", loc: "Zhongshan Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Black-faced Spoonbill", sci: "Platalea minor", family: "Threskiornithidae", date: "2025-12-21", loc: "Yizai Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Common Kingfisher", sci: "Alcedo atthis", family: "Alcedinidae", date: "2025-12-21", loc: "Yizai Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Black Drongo", sci: "Dicrurus macrocercus", family: "Dicruridae", date: "2025-12-21", loc: "Yizai Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Asian Glossy Starling", sci: "Aplonis panayensis", family: "Sturnidae", date: "2025-12-21", loc: "Yizai Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Common Myna", sci: "Acridotheres tristis", family: "Sturnidae", date: "2025-12-21", loc: "Yizai Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Eurasian Moorhen", sci: "Gallinula chloropus", family: "Rallidae", date: "2025-12-28", loc: "Kaohsiung Museum of Fine Arts", photos: [] 
+	},
+  { 
+	  name: "Gray Treepie", sci: "Dendrocitta formosae", family: "Corvidae", date: "2025-12-28", loc: "Kaohsiung Museum of Fine Arts", photos: [] 
+	},
+  { 
+	  name: "Black Bulbul", sci: "Hypsipetes leucocephalus", family: "Pycnonotidae", date: "2026-01-03", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Eastern Cattle-Egret", sci: "Bubulcus coromandus", family: "Ardeidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Crested Goshawk", sci: "Accipiter trivirgatus", family: "Accipitridae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Collared Scops-Owl", sci: "Otus lettia", family: "Strigidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Black-naped Monarch", sci: "Hypothymis azurea", family: "Monarchidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Arctic Warbler", sci: "Phylloscopus borealis", family: "Phylloscopidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Manchurian Bush Warbler", sci: "Horornis canturians", family: "Cettiidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Chestnut-tailed Starling", sci: "Sturnia malabarica", family: "Sturnidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "White-rumped Shama", sci: "Copsychus malabaricus", family: "Muscicapidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Scaly-breasted Munia", sci: "Lonchura punctulata", family: "Estrildidae", date: "2026-01-04", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "Plain Prinia", sci: "Prinia inornata", family: "Cisticolidae", date: "2026-01-17", loc: "Barclay Memorial Park, Tainan", photos: [] 
+	},
+  { 
+	  name: "White-breasted Waterhen", sci: "Amaurornis phoenicurus", family: "Rallidae", date: "2026-01-25", loc: "Niaosong Wetland, Kaohsiung", photos: [] 
+	},
+  { name: "Oriental Honey-buzzard", sci: "Pernis ptilorhynchus", family: "Accipitridae", date: "2026-01-25", loc: "Niaosong Wetland, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Northern Shoveler", sci: "Spatula clypeata", family: "Anatidae", date: "2026-02-07", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Eurasian Wigeon", sci: "Mareca penelope", family: "Anatidae", date: "2026-02-07", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Black-winged Stilt", sci: "Himantopus himantopus", family: "Recurvirostridae", date: "2026-02-07", loc: "Sicao IBA, Tainan", 
+    photos: [
+      { src: "https://photos.app.goo.gl/xKe7n5jHJ3rrnHCZ8", date: "2025-12-08", device: "Jun Camera", by: "Jun", loc: "Sicao Wetland, Tainan" },
+      { src: "https://photos.app.goo.gl/RLYF399NuXjSXfL8A", date: "2025-12-08", device: "Jun Camera", by: "Jun", loc: "Sicao Wetland, Tainan" },
+    ] 
+	},
+  { 
+	  name: "Pied Avocet", sci: "Recurvirostra avosetta", family: "Recurvirostridae", date: "2026-02-07", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Eurasian Curlew", sci: "Numenius arquata", family: "Scolopacidae", date: "2026-02-07", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Common Greenshank", sci: "Tringa nebularia", family: "Scolopacidae", date: "2026-02-07", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Little Grebe", sci: "Tachybaptus ruficollis", family: "Podicipedidae", date: "2026-02-07", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Savanna Nightjar", sci: "Caprimulgus affinis", family: "Caprimulgidae", date: "2026-02-11", loc: "NCKU, Tainan", photos: [] 
+	},
+  { 
+	  name: "Yellow Bittern", sci: "Ixobrychus sinensis", family: "Ardeidae", date: "2026-02-14", loc: "Anping Tree House, Tainan", photos: [] 
+	},
+  { 
+	  name: "Azure-winged Magpie", sci: "Cyanopica cyanus", family: "Corvidae", date: "2026-02-14", loc: "Fort Zeelandia, Tainan", photos: [] 
+	},
+  { 
+	  name: "Gray Heron", sci: "Ardea cinerea", family: "Ardeidae", date: "2026-02-17", loc: "Deyuanbi Holland Village, Tainan", photos: [] 
+	},
+  { 
+	  name: "Yellow-bellied Prinia", sci: "Prinia flaviventris", family: "Cisticolidae", date: "2026-02-17", loc: "Deyuanbi Holland Village, Tainan", photos: [] 
+	},
+  { 
+	  name: "Marsh Sandpiper", sci: "Tringa stagnatilis", family: "Scolopacidae", date: "2026-03-29", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Black-collared Starling", sci: "Gracupica nigricollis", family: "Sturnidae", date: "2026-03-29", loc: "Sicao IBA, Tainan", photos: [] 
+	},
+  { 
+	  name: "Oriental Turtle-Dove", sci: "Streptopelia orientalis", family: "Columbidae", date: "2026-04-06", loc: "Formosan Aboriginal Village, Nantou", photos: [] 
+	},
+  { 
+	  name: "Crested Serpent-Eagle", sci: "Spilornis cheela", family: "Accipitridae", date: "2026-04-06", loc: "Formosan Aboriginal Village, Nantou", photos: [] 
+	},
+  { 
+	  name: "Taiwan Blue-Magpie", sci: "Urocissa caerulea", family: "Corvidae", date: "2026-04-06", loc: "Formosan Aboriginal Village, Nantou", photos: [] 
+	},
+  { 
+	  name: "Large-billed Crow", sci: "Corvus macrorhynchos", family: "Corvidae", date: "2026-04-06", loc: "Formosan Aboriginal Village, Nantou", photos: [] 
+	},
+  { 
+	  name: "Barn Swallow", sci: "Hirundo rustica", family: "Hirundinidae", date: "2026-04-08", loc: "Qijin Qihou Hill, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Indian Silverbill", sci: "Euodice malabarica", family: "Estrildidae", date: "2026-04-08", loc: "Qijin Qihou Hill, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Asian Emerald Dove", sci: "Chalcophaps indica", family: "Columbidae", date: "2026-04-26", loc: "Shoushan NNP, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Eastern Red-rumped Swallow", sci: "Cecropis daurica", family: "Hirundinidae", date: "2026-04-26", loc: "Shoushan NNP, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Collared Finchbill", sci: "Spizixos semitorques", family: "Pycnonotidae", date: "2026-04-26", loc: "Shoushan NNP, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Rufous-capped Babbler", sci: "Cyanoderma ruficeps", family: "Timaliidae", date: "2026-04-26", loc: "Shoushan NNP, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Morrison's Fulvetta", sci: "Alcippe morrisoniana", family: "Leiothrichidae", date: "2026-04-26", loc: "Shoushan NNP, Kaohsiung", photos: [] 
+	},
+  { 
+	  name: "Eastern Spot-billed Duck", sci: "Anas zonorhyncha", family: "Anatidae", date: "2026-05-01", loc: "Dongshi Forestry Culture Park, Taichung", photos: [] 
+	},
+  { 
+	  name: "Taiwan Bamboo-Partridge", sci: "Bambusicola sonorivox", family: "Phasianidae", date: "2026-05-01", loc: "Dasyueshan IBA 6.2K, Taichung", photos: [] 
+	},
+  { 
+	  name: "Gray-chinned Minivet", sci: "Pericrocotus solaris", family: "Campephagidae", date: "2026-05-01", loc: "Dasyueshan IBA 6.2K, Taichung", photos: [] 
+	},
+  { 
+	  name: "White-bellied Erpornis", sci: "Erpornis zantholeuca", family: "Vireonidae", date: "2026-05-01", loc: "Dasyueshan IBA 6.2K, Taichung", photos: [] 
+	},
+  { 
+	  name: "Taiwan Scimitar-Babbler", sci: "Pomatorhinus musicus", family: "Timaliidae", date: "2026-05-01", loc: "Dasyueshan IBA Hengliu Creek", photos: [] 
+	},
+  { 
+	  name: "Dusky Fulvetta", sci: "Alcippe brunnea", family: "Leiothrichidae", date: "2026-05-01", loc: "Dasyueshan IBA Hengliu Creek", photos: [] 
+	},
+  { 
+	  name: "Plumbeous Redstart", sci: "Phoenicurus fuliginosus", family: "Muscicapidae", date: "2026-05-01", loc: "Dasyueshan IBA Hengliu Creek", photos: [] 
+	},
+  { 
+	  name: "White-rumped Munia", sci: "Lonchura striata", family: "Estrildidae", date: "2026-05-01", loc: "Dasyueshan IBA Hengliu Creek", photos: [] 
+	},
+  { 
+	  name: "Swinhoe's Pheasant", sci: "Lophura swinhoii", family: "Phasianidae", date: "2026-05-01", loc: "Dasyueshan IBA Forest Road 22K", photos: [] 
+	},
+  { 
+	  name: "White-bellied Green-Pigeon", sci: "Treron sieboldii", family: "Columbidae", date: "2026-05-01", loc: "Dasyueshan IBA Forest Road 23.5K", photos: [] 
+	},
+  { 
+	  name: "Taiwan Whistling-Thrush", sci: "Myophonus insularis", family: "Muscicapidae", date: "2026-05-01", loc: "Dasyueshan IBA 27K Trailhead", photos: [] 
+	},
+  { 
+	  name: "Green-backed Tit", sci: "Parus monticolus", family: "Paridae", date: "2026-05-01", loc: "Dasyueshan IBA 28.3K Tunnel", photos: [] 
+	},
+  { 
+	  name: "Asian House-Martin", sci: "Delichon dasypus", family: "Hirundinidae", date: "2026-05-01", loc: "Dasyueshan IBA Forest Road 31K", photos: [] 
+	},
+  { 
+	  name: "White-eared Sibia", sci: "Heterophasia auricularis", family: "Leiothrichidae", date: "2026-05-01", loc: "Dasyueshan IBA Forest Road 31K", photos: [] 
+	},
+  { 
+	  name: "Rufous-crowned Laughingthrush", sci: "Ianthocincla ruficeps", family: "Leiothrichidae", date: "2026-05-01", loc: "Dasyueshan IBA Forest Road 31K", photos: [] 
+	},
+  { 
+	  name: "Taiwan Hwamei", sci: "Garrulax taewanus", family: "Leiothrichidae", date: "2026-05-01", loc: "Dasyueshan IBA Anmashan Lodge (43K)", photos: [] 
+	},
+  { 
+	  name: "Taiwan Vivid Niltava", sci: "Niltava vivida", family: "Muscicapidae", date: "2026-05-01", loc: "Dasyueshan IBA Anmashan Lodge (43K)", photos: [] 
+	},
+  { 
+	  name: "Mountain Scops-Owl", sci: "Otus spilocephalus", family: "Strigidae", date: "2026-05-02", loc: "Dasyueshan IBA Anmashan Lodge (43K)", photos: [] 
+	},
+  { 
+	  name: "Coal Tit", sci: "Periparus ater", family: "Paridae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 43K", photos: [] 
+	},
+  { 
+	  name: "Taiwan Yuhina", sci: "Yuhina brunneiceps", family: "Zosteropidae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 43K", photos: [] 
+	},
+  { 
+	  name: "Ashy Wood-Pigeon", sci: "Columba pulchricollis", family: "Columbidae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 48K", photos: [] 
+	},
+  { 
+	  name: "Rufous-faced Warbler", sci: "Abroscopus albogularis", family: "Cettiidae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 48K", photos: [] 
+	},
+  { 
+	  name: "Yellowish-bellied Bush Warbler", sci: "Horornis acanthizoides", family: "Cettiidae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 48K", photos: [] 
+	},
+  { 
+	  name: "Taiwan Fulvetta", sci: "Fulvetta formosana", family: "Paradoxornithidae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 48K", photos: [] 
+	},
+  { 
+	  name: "White-tailed Robin", sci: "Myiomela leucura", family: "Muscicapidae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 48K", photos: [] 
+	},
+  { 
+	  name: "Collared Bush-Robin", sci: "Tarsiger johnstoniae", family: "Muscicapidae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 48K", photos: [] 
+	},
+  { 
+	  name: "Oriental Cuckoo", sci: "Cuculus optatus", family: "Cuculidae", date: "2026-05-02", loc: "Dasyueshan IBA Xiaoxueshan Lodge (50K)", photos: [] 
+	},
+  { 
+	  name: "Black-throated Tit", sci: "Aegithalos concinnus", family: "Aegithalidae", date: "2026-05-02", loc: "Dasyueshan IBA Xiaoxueshan Lodge (50K)", photos: [] 
+	},
+  { 
+	  name: "White-whiskered Laughingthrush", sci: "Trochalopteron morrisonianum", family: "Leiothrichidae", date: "2026-05-02", loc: "Dasyueshan IBA Xiaoxueshan Lodge (50K)", photos: [] 
+	},
+  { 
+	  name: "Taiwan Liocichla", sci: "Liocichla steerii", family: "Leiothrichidae", date: "2026-05-02", loc: "Dasyueshan IBA Xiaoxueshan Lodge (50K)", photos: [] 
+	},
+  { 
+	  name: "Flamecrest", sci: "Regulus goodfellowi", family: "Regulidae", date: "2026-05-02", loc: "Dasyueshan IBA Xiaoxueshan Lodge (50K)", photos: [] 
+	},
+  { 
+	  name: "Taiwan Bush-Robin", sci: "Tarsiger formosanus", family: "Muscicapidae", date: "2026-05-02", loc: "Dasyueshan IBA Xiaoxueshan Lodge (50K)", photos: [] 
+	},
+  { 
+	  name: "Taiwan Yellow Tit", sci: "Machlolophus holsti", family: "Paridae", date: "2026-05-02", loc: "Dasyueshan IBA Forest Road 35K", photos: [] 
+	},
+  { 
+	  name: "Maroon Oriole", sci: "Oriolus traillii", family: "Oriolidae", date: "2026-05-02", loc: "Dasyueshan IBA 6.2K House Farm", photos: [] 
+	},
+
+  // ── ADD MORE BIRDS BELOW THIS LINE ──────────────────────────
+  // Copy the block above, paste here, and fill in your data.
+  // Example (delete the // to activate):
+  //
+  // {
+  //   name: "Brown Shrike",
+  //   sci: "Lanius cristatus",
+  //   family: "Laniidae",
+  //   date: "2024-10-05",
+  //   loc: "NCKU campus, Tainan",
+  //   photos: [
+  //     { src: "", date: "2024-10-05", device: "iPhone 15", by: "Michael", loc: "NCKU campus, Tainan" },
+  //   ]
+  // },
+];
+
+// ================================================================
+//  RENDERING — you don't need to edit below this line
+// ================================================================
+
+const MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return MONTH[+m - 1] + ' ' + +day + ', ' + y;
+}
+
+// Family → emoji map (expand as needed)
+const FAMILY_EMOJI = {
+  Corvidae: '🐦‍⬛', Threskiornithidae: '🦢', Muscicapidae: '🐦',
+  Phasianidae: '🦚', Pittidae: '🦜', Pycnonotidae: '🐦',
+  Zosteropidae: '🐦', Accipitridae: '🦅', Ardeidae: '🦩',
+  Anatidae: '🦆', Charadriidae: '🐦', Scolopacidae: '🐦',
+  Alcedinidae: '🐦', Columbidae: '🕊️', Psittacidae: '🦜',
+  Strigidae: '🦉', Tytonidae: '🦉',
+};
+function birdEmoji(bird) {
+  return FAMILY_EMOJI[bird.family] || '🐦';
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const rows = BIRDS.filter(b =>
+    !q ||
+    b.name.toLowerCase().includes(q) ||
+    (b.sci && b.sci.toLowerCase().includes(q)) ||
+    (b.family && b.family.toLowerCase().includes(q)) ||
+    (b.loc && b.loc.toLowerCase().includes(q))
+  );
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty">No species match your search.</div></td></tr>';
+    document.getElementById('count-label').textContent = '0 results';
+    return;
+  }
+
+  rows.forEach((bird, idx) => {
+    const globalIdx = BIRDS.indexOf(bird);
+    const tr = document.createElement('tr');
+
+    // Photo cells (max 8 shown)
+    const maxPhotos = 8;
+    let photoCells = '';
+    bird.photos.slice(0, maxPhotos).forEach((p, pi) => {
+      const hasImg = p.src && p.src.trim() !== '';
+      photoCells += `<div class="photo-cell"
+        data-bird="${globalIdx}" data-photo="${pi}"
+        onmouseenter="showTip(event,${globalIdx},${pi})"
+        onmouseleave="hideTip()">
+        ${hasImg
+          ? `<img src="${p.src}" alt="${bird.name}" loading="lazy" />`
+          : `<span class="ph-emoji">${birdEmoji(bird)}</span>`}
+        ${pi === 0 && bird.photos.length > 1 ? `<span class="photo-count-badge">${bird.photos.length}</span>` : ''}
+      </div>`;
+    });
+    photoCells += `<div class="add-btn" title="Add photo (edit the HTML file)">+</div>`;
+
+    tr.innerHTML = `
+      <td class="td-no">${idx + 1}</td>
+      <td class="td-name">
+        <div class="common">${bird.name}</div>
+        <div class="sci">${bird.sci || ''}</div>
+        ${bird.family ? `<span class="family">${bird.family}</span>` : ''}
+      </td>
+      <td class="td-date">${fmtDate(bird.date)}</td>
+      <td class="td-loc">${bird.loc || '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="td-photos"><div class="photos-row">${photoCells}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const shown = rows.length;
+  const total = BIRDS.length;
+  document.getElementById('count-label').textContent =
+    q ? `${shown} of ${total} species` : `${total} species total`;
+}
+
+function updateStats() {
+  document.getElementById('s-species').textContent  = BIRDS.length;
+  document.getElementById('s-photos').textContent   = BIRDS.reduce((s, b) => s + b.photos.length, 0);
+  document.getElementById('s-families').textContent = new Set(BIRDS.map(b => b.family).filter(Boolean)).size;
+  const years = new Set(BIRDS.flatMap(b => b.photos.map(p => p.date.slice(0, 4))));
+  document.getElementById('s-years').textContent = years.size;
+  const now = new Date();
+  document.getElementById('last-updated').textContent =
+    MONTH[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+}
+
+// ---- Tooltip ----
+const tip    = document.getElementById('tooltip');
+const tipImg = document.getElementById('tooltip-img');
+
+function showTip(e, bi, pi) {
+  const p = BIRDS[bi].photos[pi];
+  document.getElementById('tt-date').textContent     = fmtDate(p.date);
+  document.getElementById('tt-device').textContent   = p.device || '—';
+  document.getElementById('tt-by').textContent       = p.by || '—';
+  document.getElementById('tt-location').textContent = p.loc || '—';
+  const noteRow = document.getElementById('tt-note-row');
+  if (p.note) {
+    document.getElementById('tt-note').textContent = p.note;
+    noteRow.style.display = 'flex';
+  } else {
+    noteRow.style.display = 'none';
+  }
+  if (p.src && p.src.trim()) {
+    tipImg.src = p.src;
+    tipImg.style.display = 'block';
+  } else {
+    tipImg.style.display = 'none';
+  }
+  tip.classList.add('show');
+  moveTip(e);
+}
+
+function hideTip() { tip.classList.remove('show'); }
+
+function moveTip(e) {
+  const w = 220, pad = 14;
+  let x = e.clientX + pad;
+  let y = e.clientY + pad;
+  if (x + w > window.innerWidth - 8) x = e.clientX - w - pad;
+  if (y + tip.offsetHeight > window.innerHeight - 8) y = e.clientY - tip.offsetHeight - pad;
+  tip.style.left = x + 'px';
+  tip.style.top  = y + 'px';
+}
+document.addEventListener('mousemove', e => {
+  if (tip.classList.contains('show')) moveTip(e);
+});
+
+// ---- Init ----
+updateStats();
+render();
+</script>
+</body>
+</html>
