@@ -144,6 +144,14 @@
     display: block;
   }
   .photo-cell .ph-emoji { font-size: 18px; }
+  .photo-cell.is-link { border-style: solid; border-color: var(--accent-bg); background: var(--accent-bg); }
+  .photo-cell.is-link:hover { border-color: var(--accent); }
+  .photo-cell .link-icon {
+    position: absolute; top: 2px; right: 3px;
+    font-size: 9px; color: var(--accent);
+    font-style: normal; line-height: 1;
+    pointer-events: none;
+  }
   .photo-count-badge {
     position: absolute; bottom: 1px; right: 2px;
     font-size: 9px; font-weight: 500; color: #fff;
@@ -245,6 +253,7 @@
   <div class="tt-row"><span class="tt-lbl">By</span><span class="tt-val" id="tt-by">—</span></div>
   <div class="tt-row"><span class="tt-lbl">Location</span><span class="tt-val" id="tt-location">—</span></div>
   <div class="tt-row" id="tt-note-row"><span class="tt-lbl">Note</span><span class="tt-val" id="tt-note">—</span></div>
+  <div class="tt-row" id="tt-hint-row" style="margin-top:6px;padding-top:6px;border-top:0.5px solid var(--border)"><span style="color:var(--accent);font-size:11px">↗ Click to open in Google Photos</span></div>
 </div>
 
 <script>
@@ -257,7 +266,7 @@
 //    name:    "English name",
 //    sci:     "Scientific name",
 //    family:  "Family name",
-//    date:    "YYYY-MM-DD", loc: "",   ← date of 1st encounter on eBird
+//    date:    "YYYY-MM-DD",   ← date of 1st encounter on eBird
 //    photos: [
 //      {
 //        src:     "photos/bird1_photo1.jpg",  ← file path OR full URL
@@ -637,15 +646,31 @@ function render() {
     const maxPhotos = 8;
     let photoCells = '';
     bird.photos.slice(0, maxPhotos).forEach((p, pi) => {
-      const hasImg = p.src && p.src.trim() !== '';
-      photoCells += `<div class="photo-cell"
+      const src = p.src ? p.src.trim() : '';
+      const isLink = src && (
+        src.includes('photos.app.goo.gl') ||
+        src.includes('photos.google.com') ||
+        src.includes('drive.google.com/file') ||
+        src.includes('flickr.com') ||
+        src.startsWith('http') && !src.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i) && !src.includes('drive.google.com/uc')
+      );
+      const isImg = src && !isLink;
+
+      const cellClass = isLink ? 'photo-cell is-link' : 'photo-cell';
+      const clickHandler = isLink ? `onclick="window.open('${src}','_blank')"` : '';
+      const inner = isImg
+        ? `<img src="${src}" alt="${bird.name}" loading="lazy" />`
+        : `<span class="ph-emoji">${birdEmoji(bird)}</span>`;
+      const linkBadge = isLink ? `<i class="link-icon">↗</i>` : '';
+      const countBadge = pi === 0 && bird.photos.length > 1
+        ? `<span class="photo-count-badge">${bird.photos.length}</span>` : '';
+
+      photoCells += `<div class="${cellClass}"
         data-bird="${globalIdx}" data-photo="${pi}"
         onmouseenter="showTip(event,${globalIdx},${pi})"
-        onmouseleave="hideTip()">
-        ${hasImg
-          ? `<img src="${p.src}" alt="${bird.name}" loading="lazy" />`
-          : `<span class="ph-emoji">${birdEmoji(bird)}</span>`}
-        ${pi === 0 && bird.photos.length > 1 ? `<span class="photo-count-badge">${bird.photos.length}</span>` : ''}
+        onmouseleave="hideTip()"
+        ${clickHandler}>
+        ${inner}${linkBadge}${countBadge}
       </div>`;
     });
     photoCells += `<div class="add-btn" title="Add photo (edit the HTML file)">+</div>`;
@@ -698,11 +723,26 @@ function showTip(e, bi, pi) {
   } else {
     noteRow.style.display = 'none';
   }
-  if (p.src && p.src.trim()) {
-    tipImg.src = p.src;
+  const src = p.src ? p.src.trim() : '';
+  const isLink = src && (
+    src.includes('photos.app.goo.gl') ||
+    src.includes('photos.google.com') ||
+    src.includes('drive.google.com/file') ||
+    src.includes('flickr.com') ||
+    src.startsWith('http') && !src.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i) && !src.includes('drive.google.com/uc')
+  );
+  const isImg = src && !isLink;
+  if (isImg) {
+    tipImg.src = src;
     tipImg.style.display = 'block';
   } else {
     tipImg.style.display = 'none';
+  }
+  const hintRow = document.getElementById('tt-hint-row');
+  if (isLink) {
+    hintRow.style.display = 'flex';
+  } else {
+    hintRow.style.display = 'none';
   }
   tip.classList.add('show');
   moveTip(e);
